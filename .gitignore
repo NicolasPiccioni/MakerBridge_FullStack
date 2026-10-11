@@ -1,0 +1,40 @@
+# Secretos: el .env real nunca se sube
+.env
+.env.*
+!.env.example
+
+# Python / Django
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+db.sqlite3
+staticfiles/
+media/
+
+# Node / Vite
+node_modules
+dist
+dist-ssr
+*.local
+
+# Logs
+*.log
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editores y sistema
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
