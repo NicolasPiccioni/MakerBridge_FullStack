@@ -385,3 +385,8 @@
     grid-template-columns: 1fr;
   }
 }
+
+.reg-input-wrap.has-error input {
+  border-color: #d93025;
+  box-shadow: 0 0 0 3px rgba(217, 48, 37, 0.12);
+}

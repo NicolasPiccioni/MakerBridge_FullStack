@@ -1,12 +1,19 @@
 import json
+import re
 
 from django.contrib.auth.hashers import check_password, make_password
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from django.db import IntegrityError
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
 from .auth import crear_token, requiere_rol
 from .models import Usuario
+
+# Por el registro público solo se puede ser cliente o maker (admin se crea a mano)
+ROLES_REGISTRO = ("cliente", "maker")
 
 
 def leer_json(request):
@@ -17,37 +24,81 @@ def leer_json(request):
         return None
 
 
+def error_json(mensaje, status, campo=None):
+    """Respuesta de error con el mismo formato en todos lados."""
+    cuerpo = {"error": mensaje}
+    if campo:
+        cuerpo["campo"] = campo  # para que React marque el campo con problema
+    return JsonResponse(cuerpo, status=status)
+
+
+def datos_usuario(u):
+    """Los datos del usuario que se le devuelven a React (nunca la contraseña)."""
+    return {
+        "id_usuario": u.id_usuario,
+        "nombre": u.nombre,
+        "email": u.email,
+        "rol": u.rol,
+    }
+
+
 @csrf_exempt
 @require_POST
 def register_user(request):
     datos = leer_json(request)
-    if datos is None:
-        return JsonResponse({"error": "JSON inválido"}, status=400)
+    if not isinstance(datos, dict):
+        return error_json("JSON inválido", 400)
 
     nombre = str(datos.get("nombre", "")).strip()
     email = str(datos.get("email", "")).strip().lower()
     password = str(datos.get("password", ""))
     rol = datos.get("rol")
 
-    if not nombre or not email or not password:
-        return JsonResponse({"error": "Faltan datos"}, status=400)
+    # --- Validaciones ---
+    if len(nombre) < 2:
+        return error_json("Ingresá tu nombre y apellido", 400, "nombre")
+    if len(nombre) > 150:
+        return error_json("El nombre es demasiado largo", 400, "nombre")
 
-    # Por registro público solo se puede ser cliente o maker (admin se crea a mano)
-    if rol not in ("cliente", "maker"):
-        return JsonResponse({"error": "Rol no válido"}, status=400)
+    try:
+        validate_email(email)
+    except ValidationError:
+        return error_json("El correo electrónico no es válido", 400, "email")
+    if len(email) > 150:
+        return error_json("El correo electrónico es demasiado largo", 400, "email")
 
+    if len(password) < 8:
+        return error_json("La contraseña debe tener al menos 8 caracteres", 400, "password")
+    if len(password) > 128:
+        return error_json("La contraseña es demasiado larga", 400, "password")
+    if not (re.search(r"[A-Za-z]", password) and re.search(r"\d", password)):
+        return error_json("La contraseña debe tener letras y números", 400, "password")
+
+    if rol not in ROLES_REGISTRO:
+        return error_json("Rol no válido", 400, "rol")
+
+    # --- Crear el usuario ---
     if Usuario.objects.filter(email=email).exists():
-        return JsonResponse({"error": "Ese email ya está registrado"}, status=409)
+        return error_json("Ese correo ya está registrado", 409, "email")
 
-    usuario = Usuario.objects.create(
-        nombre=nombre,
-        email=email,
-        password_hash=make_password(password),  # se guarda encriptada
-        rol=rol,
-    )
+    try:
+        usuario = Usuario.objects.create(
+            nombre=nombre,
+            email=email,
+            password_hash=make_password(password),  # se guarda encriptada
+            rol=rol,
+        )
+    except IntegrityError:
+        # Dos pedidos al mismo tiempo con el mismo email: la base lo frena
+        return error_json("Ese correo ya está registrado", 409, "email")
 
+    # Devolvemos token + usuario, igual que el login: queda logueado al registrarse
     return JsonResponse(
-        {"mensaje": "Usuario registrado", "id_usuario": usuario.id_usuario},
+        {
+            "mensaje": "Usuario registrado",
+            "token": crear_token(usuario),
+            "usuario": datos_usuario(usuario),
+        },
         status=201,
     )
 
@@ -56,8 +107,8 @@ def register_user(request):
 @require_POST
 def login_user(request):
     datos = leer_json(request)
-    if datos is None:
-        return JsonResponse({"error": "JSON inválido"}, status=400)
+    if not isinstance(datos, dict):
+        return error_json("JSON inválido", 400)
 
     email = str(datos.get("email", "")).strip().lower()
     password = str(datos.get("password", ""))
@@ -66,21 +117,16 @@ def login_user(request):
 
     # Mismo mensaje para "no existe" y "contraseña mala"
     if usuario is None or not check_password(password, usuario.password_hash):
-        return JsonResponse({"error": "Email o contraseña incorrectos"}, status=401)
+        return error_json("Email o contraseña incorrectos", 401)
 
     if not usuario.activo:
-        return JsonResponse({"error": "Usuario desactivado"}, status=403)
+        return error_json("Usuario desactivado", 403)
 
     return JsonResponse(
         {
             "mensaje": "Login exitoso",
             "token": crear_token(usuario),
-            "usuario": {
-                "id_usuario": usuario.id_usuario,
-                "nombre": usuario.nombre,
-                "email": usuario.email,
-                "rol": usuario.rol,
-            },
+            "usuario": datos_usuario(usuario),
         },
         status=200,
     )
@@ -90,17 +136,7 @@ def login_user(request):
 @requiere_rol("cliente", "maker", "admin")
 def me(request):
     """Devuelve el usuario del token. React lo usa para validar la sesión."""
-    u = request.usuario
-    return JsonResponse(
-        {
-            "usuario": {
-                "id_usuario": u.id_usuario,
-                "nombre": u.nombre,
-                "email": u.email,
-                "rol": u.rol,
-            }
-        }
-    )
+    return JsonResponse({"usuario": datos_usuario(request.usuario)})
 
 
 @require_GET

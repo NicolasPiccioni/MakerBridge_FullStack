@@ -109,7 +109,7 @@ function fuerzaPassword(password) {
 }
 
 /* ---------- Componente ---------- */
-export default function Registro({ onSubmit, onGoogle, error, loading }) {
+export default function Registro({ onSubmit, onGoogle, error, errorCampo, loading }) {
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -145,7 +145,7 @@ export default function Registro({ onSubmit, onGoogle, error, loading }) {
           <label className="reg-label" htmlFor="reg-nombre">
             NOMBRE Y APELLIDO <span className="reg-required">*</span>
           </label>
-          <div className="reg-input-wrap">
+          <div className={`reg-input-wrap ${errorCampo === "nombre" ? "has-error" : ""}`}> {/* ← cambió */}
             <span className="reg-input-icon"><UserIcon /></span>
             <input
               id="reg-nombre"
@@ -162,7 +162,7 @@ export default function Registro({ onSubmit, onGoogle, error, loading }) {
           <label className="reg-label" htmlFor="reg-email">
             CORREO ELECTRÓNICO <span className="reg-required">*</span>
           </label>
-          <div className="reg-input-wrap">
+          <div className={`reg-input-wrap ${errorCampo === "email" ? "has-error" : ""}`}> {/* ← cambió */}
             <span className="reg-input-icon"><MailIcon /></span>
             <input
               id="reg-email"
@@ -182,7 +182,7 @@ export default function Registro({ onSubmit, onGoogle, error, loading }) {
             </label>
             <span className="reg-hint">Mín. 8 caracteres alfanuméricos</span>
           </div>
-          <div className="reg-input-wrap">
+          <div className={`reg-input-wrap ${errorCampo === "password" ? "has-error" : ""}`}> {/* ← cambió */}
             <span className="reg-input-icon"><LockIcon /></span>
             <input
               id="reg-password"
