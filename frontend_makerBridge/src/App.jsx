@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./features/home/pages/Home";
 import BenchyWidget from "./components/common/BenchyWidget";
+import Registro from "./features/home/components/Registro";
 import LoginPage from "./features/home/pages/LoginPage";
 import RutaProtegida from "./features/auth/RutaProtegida";
 import {
@@ -24,6 +25,7 @@ export default function App() {
         />
 
         <Route path="/Login" element={<LoginPage />} />
+        <Route path="/registro" element={<Registro />} />
 
         <Route
           path="/cliente"
