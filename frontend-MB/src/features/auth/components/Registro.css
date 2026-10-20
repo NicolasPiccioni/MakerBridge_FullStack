@@ -1,0 +1,392 @@
+/* Todas las clases empiezan con "reg-" para no chocar con Login.css */
+
+.reg-page {
+  --reg-bg: #f6efe7;
+  --reg-card: #fbf7f2;
+  --reg-border: #eadfd2;
+  --reg-input-border: #e4d9cb;
+  --reg-ink: #2a2523;
+  --reg-muted: #7b716a;
+  --reg-coral: #e06a4e;
+  --reg-coral-dark: #cc5a3f;
+  --reg-coral-soft: #fdebe5;
+  --reg-sand: #f6ead7;
+  --reg-blue: #4b7f9b;
+  --reg-blue-dark: #3f6c85;
+
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 48px 16px 64px;
+  background: var(--reg-bg);
+  color: var(--reg-ink);
+  box-sizing: border-box;
+}
+
+.reg-page *,
+.reg-page *::before,
+.reg-page *::after {
+  box-sizing: border-box;
+}
+
+.reg-card {
+  width: 100%;
+  max-width: 460px;
+  padding: 32px 32px 28px;
+  background: var(--reg-card);
+  border: 1px solid var(--reg-border);
+  border-radius: 18px;
+  box-shadow: 0 18px 40px rgba(120, 80, 40, 0.1);
+}
+
+/* ---------- Títulos ---------- */
+.reg-title {
+  margin: 0;
+  text-align: center;
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.reg-brand {
+  color: var(--reg-coral);
+}
+
+.reg-subtitle {
+  margin: 10px auto 0;
+  max-width: 340px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--reg-muted);
+}
+
+/* ---------- Divisores ---------- */
+.reg-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 22px 0 18px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--reg-muted);
+}
+
+.reg-divider::before,
+.reg-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--reg-border);
+}
+
+.reg-divider--small {
+  margin: 18px 0 14px;
+}
+
+/* ---------- Campos ---------- */
+.reg-label {
+  display: block;
+  margin: 14px 0 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--reg-ink);
+}
+
+.reg-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.reg-hint {
+  font-size: 10px;
+  color: var(--reg-muted);
+}
+
+.reg-required {
+  color: var(--reg-coral);
+}
+
+.reg-input-wrap {
+  position: relative;
+}
+
+.reg-input-wrap input {
+  width: 100%;
+  height: 42px;
+  padding: 0 40px 0 38px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--reg-ink);
+  background: #fff;
+  border: 1px solid var(--reg-input-border);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.reg-input-wrap input::placeholder {
+  color: #a79d94;
+}
+
+.reg-input-wrap input:focus {
+  border-color: var(--reg-coral);
+  box-shadow: 0 0 0 3px rgba(224, 106, 78, 0.15);
+}
+
+.reg-input-icon {
+  position: absolute;
+  top: 50%;
+  left: 13px;
+  display: flex;
+  transform: translateY(-50%);
+  color: #a79d94;
+  pointer-events: none;
+}
+
+.reg-toggle-pass {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  display: flex;
+  padding: 6px;
+  transform: translateY(-50%);
+  color: #a79d94;
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.reg-toggle-pass:hover {
+  color: var(--reg-ink);
+}
+
+/* ---------- Medidor de contraseña ---------- */
+.reg-strength {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.reg-strength-seg {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--reg-border);
+  transition: background 0.2s;
+}
+
+.reg-strength-seg.is-on.level-1 { background: #e0574a; }
+.reg-strength-seg.is-on.level-2 { background: #f0a23c; }
+.reg-strength-seg.is-on.level-3 { background: #9bbf4a; }
+.reg-strength-seg.is-on.level-4 { background: #4ea36b; }
+
+/* ---------- Roles ---------- */
+.reg-label--roles {
+  margin-top: 20px;
+}
+
+.reg-roles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.reg-role {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px;
+  text-align: left;
+  font: inherit;
+  color: var(--reg-ink);
+  background: var(--reg-sand);
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+
+.reg-role:hover {
+  transform: translateY(-1px);
+}
+
+.reg-role.is-active {
+  background: #fff;
+  border-color: var(--reg-coral);
+}
+
+.reg-role:focus-visible {
+  outline: 3px solid rgba(224, 106, 78, 0.35);
+  outline-offset: 2px;
+}
+
+.reg-role-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin-bottom: 4px;
+  color: var(--reg-coral);
+  background: var(--reg-coral-soft);
+  border-radius: 8px;
+}
+
+.reg-role--maker .reg-role-icon {
+  color: var(--reg-blue);
+  background: #e3eef4;
+}
+
+.reg-role-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 2px 7px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #fff;
+  background: var(--reg-coral);
+  border-radius: 999px;
+}
+
+.reg-role-title {
+  font-size: 13px;
+}
+
+.reg-role-desc {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--reg-muted);
+}
+
+/* ---------- Términos ---------- */
+.reg-terms {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 18px 0 16px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--reg-muted);
+  cursor: pointer;
+}
+
+.reg-terms input {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  margin-top: 1px;
+  accent-color: var(--reg-coral);
+}
+
+.reg-terms a,
+.reg-login-link a {
+  color: var(--reg-coral);
+  text-decoration: none;
+}
+
+.reg-terms a:hover,
+.reg-login-link a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Error ---------- */
+.reg-error {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #d93025;
+}
+
+/* ---------- Botones ---------- */
+.reg-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 44px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s, opacity 0.15s;
+}
+
+.reg-btn:active {
+  transform: scale(0.99);
+}
+
+.reg-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.reg-btn--primary {
+  background: var(--reg-coral);
+}
+
+.reg-btn--primary:hover:not(:disabled) {
+  background: var(--reg-coral-dark);
+}
+
+.reg-btn--google {
+  background: var(--reg-blue);
+}
+
+.reg-btn--google:hover {
+  background: var(--reg-blue-dark);
+}
+
+.reg-google-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: #fff;
+  border-radius: 50%;
+}
+
+/* ---------- Link a login ---------- */
+.reg-login-link {
+  margin: 16px 0 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--reg-muted);
+}
+
+/* ---------- Pantallas chicas ---------- */
+@media (max-width: 480px) {
+  .reg-page {
+    padding: 24px 12px 40px;
+  }
+
+  .reg-card {
+    padding: 24px 18px 22px;
+  }
+
+  .reg-title {
+    font-size: 24px;
+  }
+
+  .reg-roles {
+    grid-template-columns: 1fr;
+  }
+}
+
+.reg-input-wrap.has-error input {
+  border-color: #d93025;
+  box-shadow: 0 0 0 3px rgba(217, 48, 37, 0.12);
+}

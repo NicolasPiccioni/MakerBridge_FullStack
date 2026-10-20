@@ -1,0 +1,42 @@
+[
+  {
+    "id_pedido": 9510,
+    "id_usuario": 12,
+    "nombre_usuario": "Martín Palermo",
+    "Titulo": "Engranaje cónico helicoidal para reductor planetario",
+    "descripcion": "Pieza de recambio para motorreductor de extrusora plástica.",
+    "cantidad": 3,
+    "material": "Nylon PA12 / Resina Tough",
+    "color": "Gris Oscuro / Curado Mate",
+    "archivo_url": "https://tu-storage.com/archivos/pedido-9510.stl",
+    "fecha_limite": "2025-02-26",
+    "estado": "en_proceso",
+    "fecha_creacion": "2025-02-14T09:30:00",
+    "Ubicacion": "Córdoba Capital (Despacho Correo Argentino)",
+    "id_cotizacion": 3089,
+    "precio": 28500,
+    "tiempo_entrega_dias": 4,
+    "mensaje": "Cuento con resina técnica de alta tenacidad curada a 65°C con tolerancia dimensional de ±0.05 mm para engranajes mecánicos.",
+    "fecha_adjudicacion": "2025-02-23T10:00:00"
+  },
+  {
+    "id_pedido": 9402,
+    "id_usuario": 31,
+    "nombre_usuario": "Carlos López",
+    "Titulo": "Soporte Dinámico Articulado para Brazo Robótico",
+    "descripcion": "Prototipo de soporte para articulación de brazo robótico.",
+    "cantidad": 1,
+    "material": "PETG Gris Carbón",
+    "color": "Gris Carbón / Mate",
+    "archivo_url": "https://tu-storage.com/archivos/pedido-9402.stl",
+    "fecha_limite": "2025-02-18",
+    "estado": "asignado",
+    "fecha_creacion": "2025-02-10T15:00:00",
+    "Ubicacion": "Buenos Aires (Vicente López - Retiro en Taller)",
+    "id_cotizacion": 3104,
+    "precio": 20000,
+    "tiempo_entrega_dias": 3,
+    "mensaje": "Cuento con calibración precisa en PETG técnico para piezas mecánicas con carga. Realizaré prueba de roscas.",
+    "fecha_adjudicacion": "2025-02-26T08:00:00"
+  }
+]

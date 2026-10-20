@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+.perfil-privado-page {
+  min-height: 100vh;
+  width: 100%;
+  text-align: left;
+  line-height: 1.5;
+}
+
+.perfil-privado-page h1,
+.perfil-privado-page h2,
+.perfil-privado-page h3 {
+  margin: 0;
+}
+
+.perfil-privado-page p {
+  margin: 0;
+}
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", sans-serif;
+
+  --color-brand-crema: #FBF9F4;
+  --color-brand-crema-dark: #F2ECE1;
+  --color-brand-blue: #568EA6;
+  --color-brand-blue-light: #6BA0B8;
+  --color-brand-blue-card: #74A7C4;
+  --color-brand-blue-card-dark: #5D94B2;
+  --color-brand-salvia: #9CB496;
+  --color-brand-salvia-light: #EDF2EB;
+  --color-brand-terracota: #DD7354;
+  --color-brand-terracota-hover: #C86244;
+  --color-brand-dark: #243033;
+  --color-brand-dark-muted: #4F6166;
+  --color-brand-border-subtle: #E2DDD2;
+
+  --shadow-soft: 0 8px 30px rgba(36, 48, 51, 0.05);
+  --shadow-card: 0 4px 20px rgba(36, 48, 51, 0.04);
+  --shadow-float: 0 12px 36px rgba(36, 48, 51, 0.12);
+}

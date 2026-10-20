@@ -1,0 +1,77 @@
+@import 'tailwindcss';
+@theme {
+  --font-mono: "Space Grotesk", monospace;
+}
+
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/container-queries';
+
+@theme {
+  --font-sans: Plus Jakarta Sans, sans-serif;
+
+  --color-brand-primary: #e06d53;
+  --color-brand-primaryHover: #cc593f;
+  --color-brand-lightBg: #fef5f2;
+  --color-brand-borderTone: #f3c4ba;
+  --color-brand-dark: #1e2432;
+  --color-brand-graySub: #5f6980;
+  --color-brand-accentYellow: #f59e0b;
+  --color-brand-accentBlue: #4a8ec9;
+  --color-brand-accentBlueLight: #eaf3fb;
+  --color-brand-accentYellowLight: #fef3c7;
+
+  --color-surface-base: #fbf9f8;
+  --color-surface-card: #ffffff;
+  --color-surface-cardMuted: #f5f3f0;
+  --color-surface-border: #eae6e2;
+
+  --shadow-warm-sm:
+    0 2px 8px -2px rgba(224, 109, 83, 0.08), 0 1px 4px -1px rgba(0, 0, 0, 0.05);
+  --shadow-warm-md:
+    0 8px 24px -4px rgba(224, 109, 83, 0.12),
+    0 4px 10px -2px rgba(0, 0, 0, 0.04);
+  --shadow-warm-lg:
+    0 16px 36px -6px rgba(224, 109, 83, 0.16),
+    0 6px 14px -3px rgba(0, 0, 0, 0.06);
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-subtle: 0 2px 12px -2px rgba(30, 36, 50, 0.06);
+  --shadow-card:
+    0 4px 16px -4px rgba(30, 36, 50, 0.08),
+    0 2px 6px -2px rgba(30, 36, 50, 0.04);
+  --shadow-card-hover:
+    0 16px 36px -8px rgba(30, 36, 50, 0.14),
+    0 6px 14px -4px rgba(30, 36, 50, 0.06);
+  --shadow-glow-primary:
+    0 16px 40px -8px rgba(224, 109, 83, 0.35),
+    0 6px 14px -3px rgba(224, 109, 83, 0.15);
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: #faf8f5;
+  color: #1e2432;
+}
+
+/* Subtle dot grid pattern background */
+.hero-pattern {
+  background-image: radial-gradient(rgba(224, 109, 83, 0.12) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
