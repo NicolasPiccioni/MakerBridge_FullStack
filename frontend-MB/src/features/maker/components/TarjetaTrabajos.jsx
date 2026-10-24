@@ -3,7 +3,7 @@ import Icon from './Icon'
 const labelSm = 'text-[10px] font-bold tracking-wider uppercase text-[#78716c] block'
 const valueLg = 'text-[14px] font-bold'
 
-export default function JobCard({ job }) {
+export default function JobCard({ job, onAction, busy = false }) {
   const {
     orderCode, quotationCode, awardedAgo, status, title, client, location,
     image, specs, deadline, amount, commitment, message, file,
@@ -112,10 +112,12 @@ export default function JobCard({ job }) {
         </a>
         <button
           type="button"
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#e06d53] text-white text-[14px] font-bold hover:bg-[#cc593f] transition-all shadow-md shadow-[#e06d53]/25"
+          onClick={onAction}
+          disabled={!onAction || busy}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#e06d53] text-white text-[14px] font-bold hover:bg-[#cc593f] transition-all shadow-md shadow-[#e06d53]/25 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Icon name={status.action.icon} className="text-[20px]" />
-          <span>{status.action.label}</span>
+          <span>{busy ? 'Guardando…' : status.action.label}</span>
         </button>
       </div>
     </article>

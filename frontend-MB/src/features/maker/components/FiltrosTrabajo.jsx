@@ -1,6 +1,9 @@
 import { STATUS_FILTERS, MATERIAL_FILTERS } from '../data/jobFilters'
 
-export default function JobFilters({ statuses, materials, onToggleStatus, onToggleMaterial, onResetStatus }) {
+export default function JobFilters({
+  statuses, materials, counts = { status: {}, materials: {} },
+  onToggleStatus, onToggleMaterial, onResetStatus,
+}) {
   return (
     <aside className="lg:col-span-4 flex flex-col gap-6">
       {/* Estado del pedido */}
@@ -43,7 +46,7 @@ export default function JobFilters({ statuses, materials, onToggleStatus, onTogg
                     checked ? `font-bold ${f.activeBadge}` : 'bg-[#f4ebe1] text-[#78716c]'
                   }`}
                 >
-                  {f.count}
+                  {counts.status[f.id] ?? 0}
                 </span>
               </label>
             )
@@ -73,7 +76,7 @@ export default function JobFilters({ statuses, materials, onToggleStatus, onTogg
                   />
                   <span>{m.label}</span>
                 </span>
-                <span className="font-mono text-[10px] text-[#78716c]">({m.count})</span>
+                <span className="font-mono text-[10px] text-[#78716c]">({counts.materials[m.id] ?? 0})</span>
               </label>
             )
           })}

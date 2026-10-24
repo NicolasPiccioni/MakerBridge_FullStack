@@ -30,13 +30,14 @@ export function toJobCard(row) {
 
   return {
     id: row.id_pedido,
+    estado: key, // 'asignado', 'en_proceso', etc.
     orderCode: `PEDIDO #MK-${row.id_pedido}`,
     quotationCode: `COTIZACIÓN #COT-${row.id_cotizacion}`,
     awardedAgo: timeAgo(row.fecha_adjudicacion).replace('Publicado', 'Adjudicado'),
     status,
-    title: row.Titulo,
+    title: row.titulo,
     client: row.nombre_usuario ?? D.client.name,
-    location: row.Ubicacion,
+    location: row.ubicacion,
     image: { src: D.image.src, alt: D.image.alt },
     specs: {
       quantity: `${row.cantidad} ${row.cantidad === 1 ? 'unidad' : 'unidades'}`,
