@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Productos } from '../API/Productos';
+import ListaSolicitudes from '../Componentes/ListaSolicitudes'
 import './MisSolicitudes.css'
 import FiltersSidebar from '../Componentes/Filtros.jsx'
 import Header from '../layout/Header'
@@ -30,7 +30,11 @@ function Solicitudes() {
                     onClear={onClear}
                   />
           <div className='flex min-w-0 flex-1 flex-col gap-6' >
-            <Productos idUsuario={24} />
+            <ListaSolicitudes
+              key={`${materials.join(',')}|${location}`}
+              materials={materials}
+              location={location}
+            />
           </div>
           
         </div>

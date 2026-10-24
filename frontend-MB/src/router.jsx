@@ -22,6 +22,7 @@ import MisTrabajos from './features/maker/page/MisTrabajos'
 
 
 /* --------------------------Rutas del cliente -------------------------*/
+import CotizacionesPedido from './features/Cliente/Paginas/CotizacionesPedido.jsx'
 import PerfilPrivado from './features/Cliente/Paginas/PerfilPrivado.jsx'
 import Solicitudes from './features/Cliente/Paginas/MisSolicitudes.jsx'
 import NuevaSolicitud from './features/Cliente/Paginas/NuevaSolicitud.jsx'
@@ -73,6 +74,7 @@ const router = createBrowserRouter([
         ),
         children: [{ index: true, element: <Solicitudes /> },
                    { path: 'nueva-solicitud', element: <NuevaSolicitud /> },
+                   { path: 'solicitudes/:id', element: <CotizacionesPedido /> },
                    { path: 'mi-perfil', element: <PerfilPrivado /> },
           
         ],
@@ -86,6 +88,7 @@ const router = createBrowserRouter([
             
             { index: true, element: <Solicitudes /> },
             { path: 'nueva-solicitud', element: <NuevaSolicitud /> },
+            { path: 'solicitudes/:id', element: <CotizacionesPedido /> },
             { path: 'mi-perfil', element: <PerfilPrivado /> }],
             
         }]
