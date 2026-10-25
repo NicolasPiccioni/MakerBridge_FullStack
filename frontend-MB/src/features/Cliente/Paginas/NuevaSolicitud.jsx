@@ -1,8 +1,6 @@
-import './NuevaSolicitud'
+import './NuevaSolicitud.css'
 import SubirPedido from '../Componentes/SubirPedido'
 import Header from '../layout/Header'
-
-
 
 function NuevaSolicitud() {
     return(
@@ -10,7 +8,7 @@ function NuevaSolicitud() {
             <Header 
             title='Nueva'
             accent='solicitud'
-            description='Lorem ipsum dolor sit amet consectetur, adipisicing elit. Qui quas voluptate velit inventore saepe! Enim maiores doloribus omnis natus commodi eius libero veniam. Eaque dolore minima dolorum quibusdam officiis nobis.'/>
+            description='Contanos qué necesitás fabricar. Tu pedido les llega a los makers, que te envían sus cotizaciones para que elijas la que más te convenga.'/>
             
             <SubirPedido />
         </>
