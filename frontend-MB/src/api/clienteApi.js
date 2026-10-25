@@ -68,3 +68,11 @@ export async function confirmarRecepcion(idPedido) {
     await pedirAlBack(`/cliente/pedidos/${encodeURIComponent(idPedido)}/confirmar-recepcion/`, enJson({})),
   )
 }
+
+// Sube el archivo 3D. Devuelve { archivo, nombre, tamano }: "archivo" es la ruta que se guarda en el pedido.
+export async function subirArchivo(archivo) {
+  const cuerpo = new FormData()
+  cuerpo.append('archivo', archivo)
+  // Sin Content-Type: el navegador lo arma solo, con el separador del multipart
+  return leerRespuesta(await pedirAlBack('/archivos/', { method: 'POST', body: cuerpo }))
+}

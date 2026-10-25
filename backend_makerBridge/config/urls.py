@@ -28,5 +28,6 @@ from django.urls import path, include
 urlpatterns = [
     path("api/", include("plataforma.urls")),
     path("api/", include("maker.urls")),
-    path("api/", include("cliente.urls")),   # ← nueva
+    path("api/", include("cliente.urls")),
+    path("api/", include("archivos.urls")),   # ← nueva
 ]

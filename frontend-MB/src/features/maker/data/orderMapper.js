@@ -39,7 +39,9 @@ export function toOrderCard(row) {
     // Si se hace un JOIN con usuarios y devolvés `nombre_usuario`, se usa acá.
     client: { ...D.client, name: row.nombre_usuario ?? D.client.name },
     location: row.ubicacion,
-    file: D.file, /* Probablemente despues deba cambiarlo por el verdadero nombre del archivo */
+    file: row.tiene_archivo
+      ? { icon: 'attach_file', iconClass: 'text-[#006878]', label: 'Archivo 3D adjunto' }
+      : { icon: 'draft', iconClass: 'text-[#a8a29e]', label: 'Sin archivo adjunto' },
     specs: [
       { label: 'Cantidad', value: `${row.cantidad} ${row.cantidad === 1 ? 'unidad' : 'unidades'}` },
       { label: 'Material', value: row.material },

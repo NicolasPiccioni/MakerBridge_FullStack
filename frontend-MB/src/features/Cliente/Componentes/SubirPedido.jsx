@@ -1,6 +1,10 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { crearPedido } from '../../../api/clienteApi'
+import { crearPedido, subirArchivo } from '../../../api/clienteApi'
+
+// Mismos límites que valida el backend
+const EXTENSIONES_VALIDAS = ['stl', 'obj', 'step', 'stp', '3mf']
+const TAMANO_MAXIMO_MB = 50
 
 // `valor` es lo que se guarda (corto, para que los filtros del maker lo reconozcan)
 const MATERIALES = [
@@ -12,7 +16,7 @@ const MATERIALES = [
 
 const SERVICIOS = ['Impresión 3D', 'Diseño', 'Impresión 3D y diseño']
 
-const MAX_DESCRIPCION = 1900 // el backend acepta 2000 y le sumamos la línea del servicio
+const MAX_DESCRIPCION = 1600 // el backend acepta 2000 y le sumamos el servicio y el link
 
 // 'AAAA-MM-DD' en la hora local (el backend no acepta fechas anteriores a hoy)
 const hoy = () => new Date().toLocaleDateString('en-CA')
@@ -50,8 +54,20 @@ const estilo = 'flex flex-col gap-1.5'
 function SubirPedido() {
   const [formulario, setFormulario] = useState(estadoInicial)
   const [enviando, setEnviando] = useState(false)
+  const [fase, setFase] = useState('') // 'subiendo' | 'publicando'
   const [error, setError] = useState(null) // { campo, mensaje }
   const [publicado, setPublicado] = useState(null) // id del pedido recién creado
+
+  // Archivo 3D
+  const [archivo, setArchivo] = useState(null)
+  const [errorArchivo, setErrorArchivo] = useState('')
+  const [arrastrando, setArrastrando] = useState(false)
+  const [subido, setSubido] = useState(null) // { ruta, origen } -> se reutiliza si hay que reintentar
+  const inputArchivo = useRef(null)
+
+  const requiereModelo = formulario.servicio === 'Impresión 3D' // el archivo es obligatorio solo acá
+  const mostrarModelo = formulario.servicio !== 'Diseño' // en "Diseño" no hay modelo previo
+  const incluyeDiseno = formulario.servicio !== 'Impresión 3D'
 
   // Borde normal, o rojo si el servidor marcó este campo
   const campo = (nombre) =>
@@ -62,19 +78,80 @@ function SubirPedido() {
     setFormulario({ ...formulario, [name]: value })
   }
 
+  // Valida extensión y tamaño antes de aceptar el archivo
+  const seleccionarArchivo = (file) => {
+    if (!file) return
+
+    const extension = file.name.split('.').pop().toLowerCase()
+
+    if (!EXTENSIONES_VALIDAS.includes(extension)) {
+      setArchivo(null)
+      setErrorArchivo('Formato no soportado. Usá STL, OBJ, STEP o 3MF.')
+      return
+    }
+
+    if (file.size > TAMANO_MAXIMO_MB * 1024 * 1024) {
+      setArchivo(null)
+      setErrorArchivo(`El archivo supera los ${TAMANO_MAXIMO_MB} MB.`)
+      return
+    }
+
+    setErrorArchivo('')
+    setArchivo(file)
+  }
+
+  const handleArchivo = (e) => seleccionarArchivo(e.target.files[0])
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    setArrastrando(false)
+    seleccionarArchivo(e.dataTransfer.files[0])
+  }
+
+  const quitarArchivo = () => {
+    setArchivo(null)
+    setErrorArchivo('')
+    if (inputArchivo.current) inputArchivo.current.value = ''
+  }
+
   const enviar = async (e) => {
     e.preventDefault()
     if (enviando) return
 
+    const link = formulario.archivoUrl.trim()
+    if (requiereModelo && !archivo && !link) {
+      setErrorArchivo('Subí tu archivo 3D para continuar (o pegá un link en el campo de abajo).')
+      return
+    }
+
     setError(null)
+    setErrorArchivo('')
     setEnviando(true)
 
-    // No hay columna de servicio: se guarda como primera línea de la descripción
-    const descripcion = [`Servicio: ${formulario.servicio}`, formulario.observaciones.trim()]
-      .filter(Boolean)
-      .join('\n')
-
     try {
+      // 1) Subir el archivo (si ya se subió en un intento anterior, se reutiliza)
+      let ruta = ''
+      if (mostrarModelo && archivo) {
+        if (subido?.origen === archivo) {
+          ruta = subido.ruta
+        } else {
+          setFase('subiendo')
+          const res = await subirArchivo(archivo)
+          ruta = res.archivo
+          setSubido({ ruta, origen: archivo })
+        }
+      }
+
+      // 2) Publicar el pedido. No hay columna de servicio: va como primera línea de la descripción.
+      setFase('publicando')
+      const descripcion = [
+        `Servicio: ${formulario.servicio}`,
+        formulario.observaciones.trim(),
+        ruta && link ? `Referencias: ${link}` : '', // si hay archivo y link, el link no se pierde
+      ]
+        .filter(Boolean)
+        .join('\n')
+
       const res = await crearPedido({
         titulo: formulario.nombre.trim(),
         descripcion,
@@ -83,21 +160,29 @@ function SubirPedido() {
         color: formulario.color.trim(),
         ubicacion: formulario.ubicacion.trim(),
         fecha_limite: formulario.fechaLimite,
-        archivo_url: formulario.archivoUrl.trim(),
+        archivo_url: ruta || link,
       })
       setPublicado(res.id_pedido)
     } catch (err) {
-      setError({
-        campo: CAMPO_DEL_FORMULARIO[err.campo] ?? null,
-        mensaje: err.message || 'No pudimos publicar tu solicitud',
-      })
+      const mensaje =
+        err instanceof TypeError
+          ? 'No se pudo conectar con el servidor'
+          : err.message || 'No pudimos publicar tu solicitud'
+
+      if (err.campo === 'archivo') setErrorArchivo(mensaje) // error de la subida del archivo
+      else setError({ campo: CAMPO_DEL_FORMULARIO[err.campo] ?? null, mensaje })
     } finally {
       setEnviando(false)
+      setFase('')
     }
   }
 
   const publicarOtro = () => {
     setFormulario(estadoInicial)
+    setArchivo(null)
+    setSubido(null)
+    setError(null)
+    setErrorArchivo('')
     setPublicado(null)
   }
 
@@ -206,7 +291,7 @@ function SubirPedido() {
               />
             </div>
 
-            {/* Ubicación (campo nuevo: el maker lo muestra en cada pedido) */}
+            {/* Ubicación (el maker la muestra en cada pedido) */}
             <div className={estilo}>
               <label htmlFor="ubicacion" className={claseLabel}>Ubicación</label>
               <input
@@ -256,10 +341,10 @@ function SubirPedido() {
               </div>
             </div>
 
-            {/* Link al archivo (mientras no exista la subida de archivos) */}
+            {/* Link a referencias o archivos adicionales */}
             <div className={`${estilo} sm:col-span-2`}>
               <label htmlFor="archivoUrl" className={claseLabel}>
-                Link a tu archivo 3D o referencias (opcional)
+                Link a referencias o archivos adicionales (opcional)
               </label>
               <input
                 type="url"
@@ -272,20 +357,23 @@ function SubirPedido() {
                 className={campo('archivoUrl')}
               />
               <p className="text-[11px] text-[#6B6B63]">
-                Subí tu modelo (STL, OBJ, STEP) o tus fotos a Drive, Dropbox o similar y pegá el link acá.
+                Las fotos o planos de referencia todavía no se pueden subir acá: subilos a Drive o Dropbox y pegá el link.
               </p>
             </div>
           </div>
 
           {/* Descripción */}
           <div className={`${estilo} mt-5`}>
-            <label htmlFor="observaciones" className={claseLabel}>Descripción del pedido</label>
+            <label htmlFor="observaciones" className={claseLabel}>
+              Descripción del pedido{incluyeDiseno ? ' (contanos qué querés que diseñemos)' : ''}
+            </label>
             <textarea
               id="observaciones"
               name="observaciones"
               value={formulario.observaciones}
               onChange={handleChange}
               rows={4}
+              required={incluyeDiseno}
               maxLength={MAX_DESCRIPCION}
               placeholder="Contanos qué necesitás: medidas, para qué se usa, observaciones o sugerencias."
               className={`min-h-28 w-full resize-y rounded-2xl border bg-[#F8F6F0] px-4 py-2.5 text-sm text-[#2B2B2B] placeholder:text-[#8A8578] focus-visible:border-[#E07A5F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E07A5F]/40 ${
@@ -293,6 +381,69 @@ function SubirPedido() {
               }`}
             />
           </div>
+
+          {/* Zona para subir el archivo 3D (no aparece si el servicio es solo Diseño) */}
+          {mostrarModelo && (
+            <div
+              onDragOver={(e) => {
+                e.preventDefault()
+                setArrastrando(true)
+              }}
+              onDragLeave={() => setArrastrando(false)}
+              onDrop={handleDrop}
+              className={`mt-8 flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 py-10 text-center transition-colors sm:py-14 ${
+                arrastrando ? 'border-[#6E9B72] bg-[#DCE8D8]' : 'border-[#A8C0A4] bg-[#E6EEE2]'
+              }`}
+            >
+              <div className="flex size-12 items-center justify-center rounded-full bg-white text-[#4A7A93]">
+                <IconoCubo />
+              </div>
+
+              <h2 className="mt-1 text-base font-bold text-[#2B2B2B] sm:text-lg">Subí tu archivo 3D</h2>
+              <p className="text-xs text-[#6B6B63]">
+                Formatos soportados: STL, OBJ, STEP, 3MF (máx. {TAMANO_MAXIMO_MB} MB)
+              </p>
+
+              <input
+                ref={inputArchivo}
+                type="file"
+                accept=".stl,.obj,.step,.stp,.3mf"
+                onChange={handleArchivo}
+                className="sr-only"
+                aria-label="Archivo del modelo 3D"
+              />
+
+              {archivo ? (
+                <div className="mt-2 flex max-w-full items-center gap-3 rounded-full bg-white px-4 py-2 text-xs font-medium text-[#2B2B2B]">
+                  <span className="truncate">
+                    {archivo.name} · {(archivo.size / 1024 / 1024).toFixed(1)} MB
+                  </span>
+                  <button
+                    type="button"
+                    onClick={quitarArchivo}
+                    disabled={enviando}
+                    className="shrink-0 cursor-pointer text-[#E07A5F] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E07A5F]/40 disabled:opacity-50"
+                  >
+                    Quitar
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => inputArchivo.current?.click()}
+                  className="mt-2 cursor-pointer rounded-full bg-white px-5 py-2 text-xs font-medium text-[#2B2B2B] shadow-sm transition-colors hover:bg-[#F8F6F0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6E9B72]"
+                >
+                  Seleccionar desde mi dispositivo
+                </button>
+              )}
+
+              {errorArchivo && (
+                <p role="alert" className="mt-1 text-xs font-medium text-[#B3402A]">
+                  {errorArchivo}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {error && (
@@ -315,7 +466,7 @@ function SubirPedido() {
             disabled={enviando}
             className="flex cursor-pointer items-center justify-center gap-2 rounded-full bg-[#E07A5F] px-8 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#C9654B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E07A5F]/50 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {enviando ? 'Publicando…' : 'Subir pedido'}
+            {enviando ? (fase === 'subiendo' ? 'Subiendo archivo…' : 'Publicando…') : 'Subir pedido'}
             {!enviando && (
               <svg
                 viewBox="0 0 24 24"
@@ -351,6 +502,25 @@ function IconoFlecha() {
       aria-hidden="true"
     >
       <path d="M6 9l6 6 6-6" />
+    </svg>
+  )
+}
+
+// Ícono del cubo de la zona de carga
+function IconoCubo() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="size-6"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M21 8l-9-5-9 5v8l9 5 9-5V8z" />
+      <path d="M3.3 7.5L12 12.5l8.7-5M12 22V12.5" />
     </svg>
   )
 }

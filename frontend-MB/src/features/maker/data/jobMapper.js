@@ -2,7 +2,6 @@ import { ORDER_DEFAULTS as D } from './orderDefaults'
 import { formatDate, timeAgo } from './orderMapper'
 import { JOB_STATUS, JOB_STATUS_FALLBACK } from './jobStatus'
 
-const FILE_SIZE = '8.4 MB' // constante: no está en la base
 const URGENT_DAYS = 7 // hasta cuántos días antes se pinta en rojo la fecha límite
 
 const formatPrice = (n) => `$ ${String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.')} ARS`
@@ -48,6 +47,6 @@ export function toJobCard(row) {
     amount: formatPrice(row.precio),
     commitment: `${row.tiempo_entrega_dias} días hábiles`,
     message: row.mensaje,
-    file: { url: row.archivo_url, size: FILE_SIZE },
+    file: row.archivo_url ? { url: row.archivo_url } : null,
   }
 }

@@ -1,15 +1,13 @@
 import { ORDER_DEFAULTS as D } from './orderDefaults'
 import { formatDate, timeAgo } from './orderMapper'
 //------------------------------------------------------Datos que se usan para el detalle de un pedido en la ¿vista de cotizacion---------
-// No está en la base de datos -> constante por el momento o sacarlo!!!
-const FILE_SIZE = '32.4 MB'
 
 // 'https://.../archivos/pedido-9510.stl?x=1' -> 'pedido-9510.stl'
-function fileNameFromUrl(url = '') {
+function fileNameFromUrl(url) {
   try {
-    return decodeURIComponent(url.split('?')[0].split('/').pop()) || 'archivo.stl'
+    return decodeURIComponent(String(url ?? '').split('?')[0].split('/').pop()) || 'archivo'
   } catch {
-    return 'archivo.stl'
+    return 'archivo'
   }
 }
 
@@ -23,7 +21,8 @@ export function toOrderDetail(row) {
     title: row.titulo,
     // Si hacés JOIN con usuarios y devolvés `nombre_usuario`, se usa acá.
     client: { name: row.nombre_usuario ?? D.client.name, location: row.ubicacion },
-    file: { name: fileNameFromUrl(row.archivo_url), size: FILE_SIZE, url: row.archivo_url },
+    // null si el pedido no tiene archivo (o no se pudo generar el link de descarga)
+    file: row.archivo_url ? { name: fileNameFromUrl(row.archivo_url), url: row.archivo_url } : null,
     specs: {
       quantity: `${row.cantidad} ${row.cantidad === 1 ? 'unidad' : 'unidades'}`,
       material: row.material,

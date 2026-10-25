@@ -5,6 +5,7 @@ from django.db import IntegrityError
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
+from archivos import storage
 
 from plataforma.auth import requiere_rol
 
@@ -77,7 +78,7 @@ def calcular_comision(precio):
     return (precio * COMISION_PORCENTAJE + 50) // 100
 
 
-def pedido_a_json(fila):
+def pedido_a_json(fila, firmar=False):
     creado = fila["fecha_creacion"]
     if creado is not None:
         if creado.tzinfo is None:           # la base guarda la hora en UTC
@@ -85,10 +86,18 @@ def pedido_a_json(fila):
         creado = creado.astimezone(ARGENTINA).isoformat()
 
     limite = fila["fecha_limite"]
+
+    # En las listas no se expone la ruta del bucket; en el detalle sí viaja el link firmado
+    archivo = fila["archivo_url"]
+    if storage.es_ruta_de_storage(archivo):
+        archivo = storage.url_de_descarga(archivo) if firmar else None
+
     return {
         **fila,
         "fecha_creacion": creado,
         "fecha_limite": limite.isoformat() if limite else None,
+        "archivo_url": archivo,
+        "tiene_archivo": bool(fila["archivo_url"]),
     }
 
 
@@ -147,7 +156,7 @@ def detalle_pedido(request, id_pedido):
     if pedido is None or pedido["estado"] not in ESTADOS_EXPLORABLES:
         return error_json("No encontramos ese pedido", status=404)
 
-    return JsonResponse(pedido_a_json(pedido))
+    return JsonResponse(pedido_a_json(pedido, firmar=True))
 
 
 @csrf_exempt
@@ -259,6 +268,7 @@ def trabajo_a_json(fila):
         "fecha_adjudicacion": _hora_argentina(fila["fecha_adjudicacion"]),
         "fecha_limite": limite.isoformat() if limite else None,
         "precio": _numero(fila["precio"]),
+        "archivo_url": storage.url_de_descarga(fila["archivo_url"]),
     }
 
 

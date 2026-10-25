@@ -39,26 +39,32 @@ export default function OrderSummaryCard({ order }) {
       </div>
 
       {/* Archivo */}
-      <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-lg bg-[#FAF6F0] border border-[#ECDDC7]">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-9 h-9 rounded-lg bg-[#FEF4F0] border border-[#FCD5CC] flex items-center justify-center text-brand-primary shrink-0">
-            <Icon name="deployed_code" className="text-[20px]" />
+      {file ? (
+        <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-lg bg-[#FAF6F0] border border-[#ECDDC7]">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-9 h-9 rounded-lg bg-[#FEF4F0] border border-[#FCD5CC] flex items-center justify-center text-brand-primary shrink-0">
+              <Icon name="deployed_code" className="text-[20px]" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-xs font-bold text-gray-900 block truncate">{file.name}</span>
+              <span className="font-mono text-[10px] text-gray-500">Archivo CAD 3D</span>
+            </div>
           </div>
-          <div className="min-w-0">
-            <span className="text-xs font-bold text-gray-900 block truncate">{file.name}</span>
-            <span className="font-mono text-[10px] text-gray-500">Archivo CAD 3D • {file.size}</span>
-          </div>
+          <a
+            href={file.url}
+            download
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-white hover:bg-[#FAF6F0] text-gray-900 text-xs font-bold border border-[#ECDDC7] shadow-sm transition-all hover:text-brand-primary shrink-0"
+          >
+            <Icon name="download" className="text-[16px] text-brand-primary" />
+            <span>Descargar archivo</span>
+          </a>
         </div>
-        <a
-          href={file.url}
-          download
-          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-white hover:bg-[#FAF6F0] text-gray-900 text-xs font-bold border border-[#ECDDC7] shadow-sm transition-all hover:text-brand-primary shrink-0"
-        >
-          <Icon name="download" className="text-[16px] text-brand-primary" />
-          <span>Descargar STL ({file.size})</span>
-        </a>
-      </div>
-
+      ) : (
+        <div className="mt-4 p-3.5 rounded-lg bg-[#FAF6F0] border border-[#ECDDC7] text-xs text-gray-500">
+          Este pedido no tiene archivo adjunto.
+        </div>
+      )}
+      
       {/* Parámetros técnicos */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4">
         <div className="bg-[#FAF6F0] border border-[#ECDDC7] p-2.5 rounded-lg flex flex-col">

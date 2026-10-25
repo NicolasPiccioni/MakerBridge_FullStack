@@ -152,9 +152,12 @@ def _crear_pedido(request):
             return error_json(f"{etiqueta} no puede superar {maximo} caracteres", campo=nombre)
         textos[nombre] = valor
 
-    # El archivo se abre desde la pantalla del maker: solo se aceptan links web
-    if textos["archivo_url"] and not textos["archivo_url"].lower().startswith(("http://", "https://")):
-        return error_json("El link del archivo tiene que empezar con http:// o https://",
+    # Un link web, o una ruta que subió ESTE mismo cliente (así no puede adjuntar archivos ajenos)
+    archivo = textos["archivo_url"]
+    es_link = archivo.lower().startswith(("http://", "https://"))
+    es_propio = archivo.startswith(f"pedidos/{request.usuario.id_usuario}/") and ".." not in archivo
+    if archivo and not (es_link or es_propio):
+        return error_json("El archivo no es válido: subilo de nuevo o pegá un link que empiece con https://",
                           campo="archivo_url")
 
     cantidad = entero_positivo(datos.get("cantidad"), CANTIDAD_MAXIMA)

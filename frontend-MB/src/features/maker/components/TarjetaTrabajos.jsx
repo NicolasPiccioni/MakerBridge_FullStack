@@ -102,14 +102,18 @@ export default function JobCard({ job, onAction, busy = false }) {
 
       {/* Acciones */}
       <div className="pt-5 flex flex-wrap items-center justify-between gap-3">
-        <a
-          href={file.url}
-          download
-          className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-[#fbf7f0] text-[#1c1917]  text-[12px] font-semibold hover:bg-[#f4ebe1] transition-colors shadow-sm"
-        >
-          <Icon name="download" className="text-[18px]" />
-          <span>Descargar STL ({file.size})</span>
-        </a>
+        {file ? (
+          <a
+            href={file.url}
+            download
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-[#fbf7f0] text-[#1c1917]  text-[12px] font-semibold hover:bg-[#f4ebe1] transition-colors shadow-sm"
+          >
+            <Icon name="download" className="text-[18px]" />
+            <span>Descargar archivo</span>
+          </a>
+        ) : (
+          <span className="text-[12px] text-[#78716c]">Sin archivo adjunto</span>
+        )}
         <button
           type="button"
           onClick={onAction}
