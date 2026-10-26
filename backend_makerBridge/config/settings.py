@@ -16,6 +16,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+def lista_de_entorno(nombre, por_defecto=""):
+    """'a,b,c' del .env -> ['a', 'b', 'c']"""
+    return [x.strip() for x in os.getenv(nombre, por_defecto).split(",") if x.strip()]
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,9 +31,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# En producción DEBUG tiene que ser False. Si la variable no existe, queda en False (más seguro).
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = lista_de_entorno("ALLOWED_HOSTS", "localhost,127.0.0.1")
+# Render informa su dirección pública en esta variable
+if os.getenv("RENDER_EXTERNAL_HOSTNAME"):
+    ALLOWED_HOSTS.append(os.environ["RENDER_EXTERNAL_HOSTNAME"])
 
 
 # Application definition
@@ -144,11 +152,11 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+
+# Las direcciones del front que pueden usar la API: las locales y las de producción (variable de entorno)
+ORIGENES_LOCALES = ["http://localhost:5173", "http://127.0.0.1:5173"]
+CORS_ALLOWED_ORIGINS = ORIGENES_LOCALES + lista_de_entorno("CORS_ALLOWED_ORIGINS")
+CSRF_TRUSTED_ORIGINS = ORIGENES_LOCALES + lista_de_entorno("CORS_ALLOWED_ORIGINS")
+
+# Render termina el HTTPS y le avisa a Django por este encabezado
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
