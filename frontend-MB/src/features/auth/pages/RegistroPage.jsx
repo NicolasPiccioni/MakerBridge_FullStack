@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Registro from "../components/Registro";
-
-const API_URL = "http://127.0.0.1:8000/api";
+import { API_URL } from "../../../api/config";
 
 const RUTA_POR_ROL = {
   cliente: "/cliente",

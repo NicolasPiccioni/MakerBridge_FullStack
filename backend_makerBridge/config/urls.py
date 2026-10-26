@@ -24,11 +24,17 @@ from api.views import hola
 # ]
 
 from django.urls import path, include
+from django.http import JsonResponse
+
+def health(request):
+    """Responde "ok" sin tocar la base de datos. Lo usa el monitor para mantener despierto el servidor."""
+    return JsonResponse({"estado": "ok"})
 
 urlpatterns = [
+    path("api/health/", health),  
     path("api/", include("plataforma.urls")),
     path("api/", include("maker.urls")),
     path("api/", include("cliente.urls")),
     path("api/", include("archivos.urls")),
-    path("api/", include("perfil.urls")),   # ← nueva
+    path("api/", include("perfil.urls")),
 ]
