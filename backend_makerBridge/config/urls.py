@@ -29,5 +29,6 @@ urlpatterns = [
     path("api/", include("plataforma.urls")),
     path("api/", include("maker.urls")),
     path("api/", include("cliente.urls")),
-    path("api/", include("archivos.urls")),   # ← nueva
+    path("api/", include("archivos.urls")),
+    path("api/", include("perfil.urls")),   # ← nueva
 ]

@@ -37,6 +37,12 @@ export default function Navbar({ user: userDemo = DEFAULT_USER }) {
   const [menuOpen, setMenuOpen] = useState(false) // menú de navegación (celular)
   const [userMenuOpen, setUserMenuOpen] = useState(false) // menú del usuario
   const userMenuRef = useRef(null)
+  const [, refrescar] = useState(0) // se vuelve a dibujar si el perfil cambió el nombre
+  useEffect(() => {
+    const alCambiar = () => refrescar((n) => n + 1)
+    window.addEventListener('usuario-actualizado', alCambiar)
+    return () => window.removeEventListener('usuario-actualizado', alCambiar)
+  }, [])
 
   const guardado = leerUsuario()
   const user = guardado

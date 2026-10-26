@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import JobFilters from '../components/FiltrosTrabajo'
 import JobCard from '../components/TarjetaTrabajos'
 import Pagination from '../components/Pagination'
+import ConfirmarEstadoModal from '../components/ConfirmarEstadoModal'
 import { getTrabajos, avanzarTrabajo } from '../../../api/pedidosApi'
 import { toJobCard } from '../data/jobMapper'
-import { JOB_STATUS } from '../data/jobStatus'
 import { SIGUIENTE_ESTADO } from '../data/jobTransitions'
 import { DEFAULT_STATUSES, DEFAULT_MATERIALS } from '../data/jobFilters'
 
@@ -25,9 +25,10 @@ export default function MisTrabajos() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  // --- Avanzar el estado de un trabajo ---
+  // --- Avanzar el estado de un trabajo (modal de confirmación) ---
   const [refresco, setRefresco] = useState(0) // al cambiarlo, se vuelve a pedir la lista
-  const [accion, setAccion] = useState({ id: null, error: '' })
+  const [modal, setModal] = useState(null) // { job, de, a }
+  const cerrarModal = useCallback(() => setModal(null), [])
 
   useEffect(() => {
     let ignore = false // evita que una respuesta vieja pise a una más nueva
@@ -53,21 +54,19 @@ export default function MisTrabajos() {
     }
   }, [statuses, materials, page, refresco])
 
-  const handleAvanzar = async (job) => {
+  const abrirModal = (job) => {
     const siguiente = SIGUIENTE_ESTADO[job.estado]
-    if (!siguiente || accion.id) return
+    if (siguiente) setModal({ job, de: job.estado, a: siguiente })
+  }
 
-    const nombre = JOB_STATUS[siguiente]?.label ?? siguiente
-    if (!window.confirm(`¿Pasar "${job.title}" a "${nombre}"? Se le avisará al cliente por mail.`)) return
-
-    setAccion({ id: job.id, error: '' })
+  // Si falla, el modal muestra el motivo y sigue abierto. Con éxito o sin él,
+  // se recarga la lista para mostrar el estado real.
+  const confirmarCambio = async () => {
     try {
-      await avanzarTrabajo(job.id, job.estado)
-      setAccion({ id: null, error: '' })
-    } catch (err) {
-      setAccion({ id: null, error: err.message || 'No pudimos actualizar el trabajo' })
+      await avanzarTrabajo(modal.job.id, modal.de)
+    } finally {
+      setRefresco((n) => n + 1)
     }
-    setRefresco((n) => n + 1) // en cualquier caso, mostramos el estado real
   }
 
   // Cualquier cambio de filtro vuelve a la página 1
@@ -126,12 +125,6 @@ export default function MisTrabajos() {
             </p>
           )}
 
-          {accion.error && (
-            <p role="alert" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">
-              {accion.error}
-            </p>
-          )}
-
           {!error && loading && jobs.length === 0 && (
             <p className="text-[15px] text-[#78716c] py-10 text-center">Cargando trabajos…</p>
           )}
@@ -151,8 +144,7 @@ export default function MisTrabajos() {
               <JobCard
                 key={job.id}
                 job={job}
-                onAction={SIGUIENTE_ESTADO[job.estado] ? () => handleAvanzar(job) : undefined}
-                busy={accion.id === job.id}
+                onAction={SIGUIENTE_ESTADO[job.estado] ? () => abrirModal(job) : undefined}
               />
             ))}
           </div>
@@ -169,6 +161,15 @@ export default function MisTrabajos() {
           )}
         </section>
       </div>
+
+      <ConfirmarEstadoModal
+        open={!!modal}
+        pedido={modal ? { codigo: `MK-${modal.job.id}`, titulo: modal.job.title } : null}
+        estadoActual={modal?.de}
+        estadoNuevo={modal?.a}
+        onClose={cerrarModal}
+        onConfirm={confirmarCambio}
+      />
     </>
   )
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import Icon from '../components/Icon'
 
 const navLinks = [
@@ -36,6 +36,12 @@ export default function MakerHeader({ user: userDemo = { initials: 'CD', name: '
   const navigate = useNavigate()
   const [menuAbierto, setMenuAbierto] = useState(false)
   const menuRef = useRef(null)
+  const [, refrescar] = useState(0) // se vuelve a dibujar si el perfil cambió el nombre
+  useEffect(() => {
+    const alCambiar = () => refrescar((n) => n + 1)
+    window.addEventListener('usuario-actualizado', alCambiar)
+    return () => window.removeEventListener('usuario-actualizado', alCambiar)
+  }, [])
 
   const guardado = leerUsuario()
   const user = guardado
@@ -131,6 +137,15 @@ export default function MakerHeader({ user: userDemo = { initials: 'CD', name: '
               </div>
 
               <div className="p-1.5">
+                <Link
+                  to="/maker/mi-perfil"
+                  role="menuitem"
+                  onClick={() => setMenuAbierto(false)}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-semibold text-[#292524] hover:bg-[#FAF6F0] transition-colors"
+                >
+                  <Icon name="person" className="text-[18px]" />
+                  Mi perfil
+                </Link>
                 <button
                   type="button"
                   role="menuitem"

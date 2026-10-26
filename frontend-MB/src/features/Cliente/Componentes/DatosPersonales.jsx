@@ -1,32 +1,67 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-const inputClass =
-  'w-full bg-white text-brand-dark text-base rounded-full border border-gray-400/80 px-5 py-3 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/30 transition shadow-sm outline-none';
+const inputBase =
+  'w-full bg-white text-brand-dark text-base rounded-full border px-5 py-3 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/30 transition shadow-sm outline-none';
 
-const Label = ({ children }) => (
-  <label className="block text-base font-bold text-brand-dark mb-2">{children}</label>
+const Label = ({ htmlFor, children }) => (
+  <label htmlFor={htmlFor} className="block text-base font-bold text-brand-dark mb-2">{children}</label>
 );
 
-const DatosPersonales = ({ user, onSave }) => {
-  const [form, setForm] = useState({
-    full_name: user.nombre,
-    email: user.email,
-    phone: user.telefono,
-    city: user.localidad,
-    address: user.direccion,
-    zip: user.codigoPostal,
-    notifWhatsapp: user.notifWhatsapp,
-    notifEmail: user.notifEmail,
-  });
+// Del perfil que manda el servidor, solo lo que se puede editar
+const formDesde = (p) => ({
+  nombre: p.nombre,
+  telefono: p.telefono,
+  localidad: p.localidad,
+  direccion: p.direccion,
+  codigo_postal: p.codigo_postal,
+  notif_whatsapp: p.notif_whatsapp,
+  notif_email: p.notif_email,
+});
+
+const DatosPersonales = ({ perfil, onSave }) => {
+  const [form, setForm] = useState(() => formDesde(perfil));
+  const [guardando, setGuardando] = useState(false);
+  const [aviso, setAviso] = useState(null); // { tipo: 'ok' | 'error', texto, campo }
+
+  // Si el perfil cambia (por ejemplo, después de guardar), el formulario se sincroniza
+  useEffect(() => {
+    setForm(formDesde(perfil));
+  }, [perfil]);
+
+  const hayCambios = JSON.stringify(form) !== JSON.stringify(formDesde(perfil));
+
+  // Borde normal, o rojo si el servidor marcó este campo
+  const clase = (campo) =>
+    `${inputBase} ${aviso?.campo === campo ? 'border-red-500 ring-2 ring-red-200' : 'border-gray-400/80'}`;
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
-  const handleSubmit = (e) => {
+  const descartar = () => {
+    setForm(formDesde(perfil));
+    setAviso(null);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave?.(form); // listo para enviar al backend con fetch/axios
+    if (guardando || !hayCambios) return;
+
+    setGuardando(true);
+    setAviso(null);
+    try {
+      await onSave(form);
+      setAviso({ tipo: 'ok', texto: 'Guardamos tus cambios.' });
+    } catch (err) {
+      setAviso({
+        tipo: 'error',
+        texto: err instanceof TypeError ? 'No se pudo conectar con el servidor.' : err.message,
+        campo: err.campo,
+      });
+    } finally {
+      setGuardando(false);
+    }
   };
 
   return (
@@ -43,63 +78,94 @@ const DatosPersonales = ({ user, onSave }) => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Nombre */}
         <div>
-          <Label>Nombre y apellido</Label>
+          <Label htmlFor="nombre">Nombre y apellido</Label>
           <input
-            name="full_name"
+            id="nombre"
+            name="nombre"
             type="text"
-            value={form.full_name}
+            required
+            maxLength={150}
+            value={form.nombre}
             onChange={handleChange}
             placeholder="Ingresá tu nombre y apellido completo"
-            className={inputClass}
+            className={clase('nombre')}
           />
         </div>
 
-        {/* Email */}
+        {/* Email (solo lectura: es el usuario con el que se inicia sesión) */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <Label>Email:</Label>
+            <Label htmlFor="email">Email:</Label>
             <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
               Email verificado
             </span>
           </div>
-          <div className="relative">
-            <input
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="ejemplo@correo.com"
-              className={`${inputClass} pr-10`}
-            />
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-600">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path clipRule="evenodd" fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
-              </svg>
-            </div>
-          </div>
+          <input
+            id="email"
+            type="email"
+            readOnly
+            value={perfil.email}
+            className={`${inputBase} border-gray-300 bg-gray-50 text-brand-dark-muted cursor-not-allowed`}
+          />
+          <p className="mt-1.5 text-xs text-brand-dark-muted">
+            Es el usuario con el que ingresás a MakerBridge, por eso no se puede cambiar.
+          </p>
         </div>
 
         {/* Teléfono + Localidad */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <Label>Teléfono / WhatsApp:</Label>
-            <input name="phone" type="tel" value={form.phone} onChange={handleChange} className={inputClass} />
+            <Label htmlFor="telefono">Teléfono / WhatsApp:</Label>
+            <input
+              id="telefono"
+              name="telefono"
+              type="tel"
+              maxLength={30}
+              value={form.telefono}
+              onChange={handleChange}
+              placeholder="+54 9 351 555-1234"
+              className={clase('telefono')}
+            />
           </div>
           <div>
-            <Label>Localidad:</Label>
-            <input name="city" type="text" value={form.city} onChange={handleChange} className={inputClass} />
+            <Label htmlFor="localidad">Localidad:</Label>
+            <input
+              id="localidad"
+              name="localidad"
+              type="text"
+              maxLength={100}
+              value={form.localidad}
+              onChange={handleChange}
+              className={clase('localidad')}
+            />
           </div>
         </div>
 
         {/* Dirección + CP */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2">
-            <Label>Dirección de entrega:</Label>
-            <input name="address" type="text" value={form.address} onChange={handleChange} className={inputClass} />
+            <Label htmlFor="direccion">Dirección de entrega:</Label>
+            <input
+              id="direccion"
+              name="direccion"
+              type="text"
+              maxLength={200}
+              value={form.direccion}
+              onChange={handleChange}
+              className={clase('direccion')}
+            />
           </div>
           <div>
-            <Label>Código Postal:</Label>
-            <input name="zip" type="text" value={form.zip} onChange={handleChange} className={inputClass} />
+            <Label htmlFor="codigo_postal">Código Postal:</Label>
+            <input
+              id="codigo_postal"
+              name="codigo_postal"
+              type="text"
+              maxLength={10}
+              value={form.codigo_postal}
+              onChange={handleChange}
+              className={clase('codigo_postal')}
+            />
           </div>
         </div>
 
@@ -109,8 +175,8 @@ const DatosPersonales = ({ user, onSave }) => {
             Preferencias de aviso
           </span>
           {[
-            { name: 'notifWhatsapp', label: 'Recibir notificaciones por WhatsApp cuando la pieza esté en producción o lista' },
-            { name: 'notifEmail', label: 'Recibir resumen de presupuestos y cotizaciones de nuevos makers por correo' },
+            { name: 'notif_whatsapp', label: 'Recibir notificaciones por WhatsApp cuando la pieza esté en producción o lista' },
+            { name: 'notif_email', label: 'Recibir resumen de presupuestos y cotizaciones de nuevos makers por correo' },
           ].map(({ name, label }) => (
             <label key={name} className="flex items-center space-x-3 cursor-pointer select-none">
               <input
@@ -125,23 +191,38 @@ const DatosPersonales = ({ user, onSave }) => {
           ))}
         </div>
 
+        {aviso && (
+          <p
+            role={aviso.tipo === 'error' ? 'alert' : 'status'}
+            className={`rounded-xl border p-3 text-sm ${
+              aviso.tipo === 'error'
+                ? 'border-red-200 bg-red-50 text-red-700'
+                : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+            }`}
+          >
+            {aviso.texto}
+          </p>
+        )}
+
         {/* Botones */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-end gap-3.5">
           <button
             type="button"
-            onClick={() => setForm({ ...form })}
-            className="w-full sm:w-auto px-7 py-3 rounded-full text-sm font-bold text-brand-dark-muted bg-brand-crema hover:bg-brand-crema-dark hover:text-brand-dark transition"
+            onClick={descartar}
+            disabled={!hayCambios || guardando}
+            className="w-full sm:w-auto px-7 py-3 rounded-full text-sm font-bold text-brand-dark-muted bg-brand-crema hover:bg-brand-crema-dark hover:text-brand-dark transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Descartar cambios
           </button>
           <button
             type="submit"
-            className="w-full sm:w-auto px-9 py-3 rounded-full text-sm font-bold text-white bg-brand-terracota hover:bg-brand-terracota-hover shadow-md hover:shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2"
+            disabled={!hayCambios || guardando}
+            className="w-full sm:w-auto px-9 py-3 rounded-full text-sm font-bold text-white bg-brand-terracota hover:bg-brand-terracota-hover shadow-md hover:shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
             </svg>
-            Guardar modificaciones
+            {guardando ? 'Guardando…' : 'Guardar modificaciones'}
           </button>
         </div>
       </form>

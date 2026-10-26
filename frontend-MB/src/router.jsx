@@ -103,9 +103,9 @@ const router = createBrowserRouter([
           
         ),
         children: [{ index: true, element: <ExplorarPedidos /> },
-                   { path: 'cotizar/:id', element: <CotizarSolicitud /> },
-                   { path: 'mis-trabajos', element: <MisTrabajos /> },
-          
+           { path: 'cotizar/:id', element: <CotizarSolicitud /> },
+           { path: 'mis-trabajos', element: <MisTrabajos /> },
+           { path: 'mi-perfil', element: <PerfilPrivado /> },
         ],
       },
       ...(import.meta.env.DEV

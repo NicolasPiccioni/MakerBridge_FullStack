@@ -1,15 +1,9 @@
 import { useState } from 'react';
+import { cambiarPassword } from '../../../api/perfilApi';
 
-const Field = ({ label, value, action }) => (
+const Field = ({ label, value }) => (
   <div>
-    {action ? (
-      <div className="flex items-center justify-between mb-1.5">
-        <label className="block text-sm font-semibold text-white/95">{label}</label>
-        {action}
-      </div>
-    ) : (
-      <label className="block text-sm font-semibold text-white/95 mb-1.5">{label}</label>
-    )}
+    <label className="block text-sm font-semibold text-white/95 mb-1.5">{label}</label>
     <input
       readOnly
       type="text"
@@ -18,6 +12,132 @@ const Field = ({ label, value, action }) => (
     />
   </div>
 );
+
+const claseInput = (conError) =>
+  `w-full bg-white text-brand-dark text-sm font-semibold py-2.5 px-4 rounded-full border-0 shadow-sm focus:ring-2 focus:ring-brand-dark ${
+    conError ? 'ring-2 ring-red-500' : ''
+  }`;
+
+const FORM_VACIO = { actual: '', nueva: '', repetir: '' };
+
+function CambiarPassword() {
+  const [abierto, setAbierto] = useState(false);
+  const [form, setForm] = useState(FORM_VACIO);
+  const [guardando, setGuardando] = useState(false);
+  const [aviso, setAviso] = useState(null); // { tipo: 'ok' | 'error', texto, campo }
+
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const cerrar = () => {
+    setAbierto(false);
+    setForm(FORM_VACIO);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (guardando) return;
+
+    if (form.nueva !== form.repetir) {
+      setAviso({ tipo: 'error', texto: 'Las contraseñas nuevas no coinciden.', campo: 'repetir' });
+      return;
+    }
+
+    setGuardando(true);
+    setAviso(null);
+    try {
+      await cambiarPassword(form.actual, form.nueva);
+      cerrar();
+      setAviso({ tipo: 'ok', texto: 'Cambiaste tu contraseña.' });
+    } catch (err) {
+      setAviso({
+        tipo: 'error',
+        texto: err instanceof TypeError ? 'No se pudo conectar con el servidor.' : err.message,
+        campo: err.campo,
+      });
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="block text-sm font-semibold text-white/95">Contraseña:</span>
+        <button
+          type="button"
+          onClick={() => (abierto ? cerrar() : setAbierto(true))}
+          className="text-xs font-semibold text-white underline hover:text-yellow-200 transition"
+        >
+          {abierto ? 'Cancelar' : 'Modificar'}
+        </button>
+      </div>
+
+      {!abierto && (
+        <input
+          readOnly
+          type="text"
+          value="••••••••••••"
+          aria-label="Contraseña (oculta)"
+          className="w-full bg-white text-brand-dark text-sm font-semibold py-2.5 px-4 rounded-full border-0 shadow-sm tracking-widest cursor-default focus:ring-0"
+        />
+      )}
+
+      {abierto && (
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <input
+            name="actual"
+            type="password"
+            required
+            autoComplete="current-password"
+            placeholder="Contraseña actual"
+            value={form.actual}
+            onChange={handleChange}
+            className={claseInput(aviso?.campo === 'actual')}
+          />
+          <input
+            name="nueva"
+            type="password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            placeholder="Contraseña nueva (mín. 8, con letras y números)"
+            value={form.nueva}
+            onChange={handleChange}
+            className={claseInput(aviso?.campo === 'nueva')}
+          />
+          <input
+            name="repetir"
+            type="password"
+            required
+            autoComplete="new-password"
+            placeholder="Repetí la contraseña nueva"
+            value={form.repetir}
+            onChange={handleChange}
+            className={claseInput(aviso?.campo === 'repetir')}
+          />
+          <button
+            type="submit"
+            disabled={guardando}
+            className="w-full py-2.5 rounded-full bg-brand-dark text-white text-sm font-bold hover:bg-black transition disabled:opacity-60 disabled:cursor-wait"
+          >
+            {guardando ? 'Guardando…' : 'Cambiar contraseña'}
+          </button>
+        </form>
+      )}
+
+      {aviso && (
+        <p
+          role={aviso.tipo === 'error' ? 'alert' : 'status'}
+          className={`mt-3 rounded-xl bg-white/90 px-3 py-2 text-xs font-semibold ${
+            aviso.tipo === 'error' ? 'text-red-700' : 'text-emerald-700'
+          }`}
+        >
+          {aviso.texto}
+        </p>
+      )}
+    </div>
+  );
+}
 
 const DatosUsuario = ({ user }) => {
   const [copiado, setCopiado] = useState(false);
@@ -80,28 +200,7 @@ const DatosUsuario = ({ user }) => {
         <Field label="Rol:" value={user.rol} />
         <Field label="Fecha de registro:" value={user.fechaRegistro} />
 
-        {/* Contraseña */}
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-sm font-semibold text-white/95">Contraseña actual:</label>
-            <button type="button" className="text-xs font-semibold text-white underline hover:text-yellow-200 transition">
-              Modificar
-            </button>
-          </div>
-          <div className="relative">
-            <input
-              readOnly
-              type="password"
-              defaultValue="supersecurepassword123"
-              className="w-full bg-white text-brand-dark text-sm font-semibold py-2.5 px-4 rounded-full border-0 shadow-sm tracking-widest focus:ring-0"
-            />
-            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-dark-muted">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-              </svg>
-            </span>
-          </div>
-        </div>
+        <CambiarPassword />
       </div>
     </div>
   );
